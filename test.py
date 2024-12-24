@@ -108,7 +108,7 @@ class Network(object):
                                                                                           ori_image_regress,
                                                                                           ori_image_points)
 
-            cv2.imshow('ori_image_regress', ori_image_regress)
+            # cv2.imshow('ori_image_regress', ori_image_regress)
             cv2.imshow('ori_image_points', ori_image_points)
             k = cv2.waitKey(0) & 0xFF
             if k == ord('q'):

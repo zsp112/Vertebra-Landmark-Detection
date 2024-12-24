@@ -4,7 +4,7 @@ import pre_proc
 import cv2
 from scipy.io import loadmat
 import numpy as np
-
+import json
 
 def rearrange_pts(pts):
     boxes = []
@@ -26,6 +26,20 @@ def rearrange_pts(pts):
         boxes.append(br)
     return np.asarray(boxes, np.float32)
 
+def loadPoint(annopath):
+    # print(annopath)
+    f = open(annopath   , 'r', encoding='utf-8')
+    jsonData = json.load(f)
+    pt = []
+    pt_num = len(jsonData['shapes'])
+    # for i in range(pt_num - 1, -1, -1):   # 倒序取点
+    for i in range(0, pt_num, 1):     # 正序取点
+        shape = jsonData['shapes'][i]
+        pt.append(shape["points"][0])
+    # for shape in jsonData['shapes']:
+    #     pt.append(shape["points"][0])
+    pt = np.asarray(pt)
+    return pt
 
 class BaseDataset(data.Dataset):
     def __init__(self, data_dir, phase, input_h=None, input_w=None, down_ratio=4):
@@ -41,16 +55,26 @@ class BaseDataset(data.Dataset):
         self.img_ids = sorted(os.listdir(self.img_dir))
 
     def load_image(self, index):
-        image = cv2.imread(os.path.join(self.img_dir, self.img_ids[index]))
+        file_path = os.path.join(self.img_dir, self.img_ids[index])
+        image = cv2.imdecode(np.fromfile(file_path, dtype=np.uint8), cv2.IMREAD_COLOR)
+        # image = cv2.imread(os.path.join(self.img_dir, self.img_ids[index]))
         return image
 
+    # def load_gt_pts(self, annopath):
+    #     pts = loadmat(annopath)['p2']   # num x 2 (x,y)
+    #     pts = rearrange_pts(pts)
+    #     return pts
     def load_gt_pts(self, annopath):
-        pts = loadmat(annopath)['p2']   # num x 2 (x,y)
+        pts = loadPoint(annopath)  # num x 2 (x,y)
         pts = rearrange_pts(pts)
         return pts
 
+    # def load_annoFolder(self, img_id):
+    #     return os.path.join(self.data_dir, 'labels', self.phase, img_id+'.mat')
+    '''获得标注文件路径-json'''
     def load_annoFolder(self, img_id):
-        return os.path.join(self.data_dir, 'labels', self.phase, img_id+'.mat')
+        img_id = img_id.split('.')[0]
+        return os.path.join(self.data_dir, 'labels', self.phase, img_id+'.json')
 
     def load_annotation(self, index):
         img_id = self.img_ids[index]
