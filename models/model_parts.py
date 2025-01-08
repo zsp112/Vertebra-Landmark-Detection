@@ -40,8 +40,6 @@ class CombinationModule(nn.Module):
 
     # 修改网络：在concat之后加注意力机制
     def forward(self, x_low, x_up):
-        # print(x_low.shape)
-        # print(x_up.shape)
         # 上采样操作
         x_low = self.up(F.interpolate(x_low, x_up.shape[2:], mode='bilinear', align_corners=False))
 
