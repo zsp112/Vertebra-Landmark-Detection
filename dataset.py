@@ -42,7 +42,7 @@ def loadPoint(annopath):
     return pt
 
 class BaseDataset(data.Dataset):
-    def __init__(self, data_dir, phase, input_h=None, input_w=None, down_ratio=4):
+    def __init__(self, data_dir, phase, input_h=None, input_w=None, down_ratio=4, vertebra_num=17):
         super(BaseDataset, self).__init__()
         self.data_dir = data_dir
         self.phase = phase
@@ -50,7 +50,8 @@ class BaseDataset(data.Dataset):
         self.input_w = input_w
         self.down_ratio = down_ratio
         self.class_name = ['__background__', 'cell']
-        self.num_classes = 68
+        self.num_classes = vertebra_num * 4
+        self.vertebra_num = vertebra_num
         self.img_dir = os.path.join(data_dir, 'data', self.phase)
         self.img_ids = sorted(os.listdir(self.img_dir))
 
@@ -60,27 +61,51 @@ class BaseDataset(data.Dataset):
         # image = cv2.imread(os.path.join(self.img_dir, self.img_ids[index]))
         return image
 
-    # def load_gt_pts(self, annopath):
-    #     pts = loadmat(annopath)['p2']   # num x 2 (x,y)
-    #     pts = rearrange_pts(pts)
-    #     return pts
     def load_gt_pts(self, annopath):
-        pts = loadPoint(annopath)  # num x 2 (x,y)
+        pts = loadmat(annopath)['p2']  # num x 2 (x,y)
+        # 68 * 2
         pts = rearrange_pts(pts)
         return pts
 
-    # def load_annoFolder(self, img_id):
-    #     return os.path.join(self.data_dir, 'labels', self.phase, img_id+'.mat')
-    '''获得标注文件路径-json'''
+
+    '''获得标注文件路径-原版'''
     def load_annoFolder(self, img_id):
-        img_id = img_id.split('.')[0]
-        return os.path.join(self.data_dir, 'labels', self.phase, img_id+'.json')
+        return os.path.join(self.data_dir, 'labels', self.phase, img_id + '.mat')
 
     def load_annotation(self, index):
         img_id = self.img_ids[index]
-        annoFolder = self.load_annoFolder(img_id)
-        pts = self.load_gt_pts(annoFolder)
+        prefix = img_id[:3]
+
+        if prefix == 'sun':
+            # 获得标注文件路径 mat
+            annoFolder = self.load_annoFolder(img_id)
+            pts = self.load_gt_pts(annoFolder)
+        else:
+            # json
+            annoFolder = self.load_json_annoFolder(img_id)
+            pts = self.load_json_gt_pts(annoFolder)
         return pts
+
+    '''获得标注文件路径-json'''
+    def load_json_annoFolder(self, img_id):
+        img_id = img_id.split('.')[0]
+        return os.path.join(self.data_dir, 'labels', self.phase, img_id + '.json')
+
+    def load_json_gt_pts(self, annopath):
+        # ----------------------------------------------------
+        # 68 * 2
+        pts = loadPoint(annopath)
+        # ----------------------------------------------------
+        pts = rearrange_pts(pts)
+        return pts
+
+    def load_my_annotation(self, index):
+        img_id = self.img_ids[index]
+        # 获得标注文件路径
+        annoFolder = self.load_my_annoFolder(img_id)
+        pts = self.load_my_gt_pts(annoFolder)
+        return pts
+
 
     def __getitem__(self, index):
         img_id = self.img_ids[index]

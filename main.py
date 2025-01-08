@@ -17,9 +17,9 @@ def parse_args():
     parser.add_argument('--seg_thresh', type=float, default=0.5, help='confidence threshold')
     parser.add_argument('--num_classes', type=int, default=1, help='number of classes')
     parser.add_argument('--ngpus', type=int, default=0, help='number of gpus')
-    parser.add_argument('--resume', type=str, default='model_last.pth', help='weights to be resumed')
-    parser.add_argument('--data_dir', type=str, default='../Datasets/stand_0401/', help='data directory')
-    parser.add_argument('--phase', type=str, default='test', help='data directory')
+    parser.add_argument('--resume', type=str, default='model_30.pth', help='weights to be resumed')
+    parser.add_argument('--data_dir', type=str, default='../../Datasets/Contestdata/', help='data directory')
+    parser.add_argument('--phase', type=str, default='train', help='data directory')
     parser.add_argument('--dataset', type=str, default='spinal', help='data directory')
     args = parser.parse_args()
     return args
@@ -36,5 +36,6 @@ if __name__ == '__main__':
         is_object.test(args, save=False)
     elif args.phase == 'eval':
         is_object = eval.Network(args)
-        is_object.eval(args, save=False)
-        # is_object.eval_three_angles(args, save=False)
+        # is_object.eval(args, save=False)
+        is_object.eval_three_angles(args, save=False)
+        # is_object.eval_landmark(args, save=False)

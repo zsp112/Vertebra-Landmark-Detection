@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 
-
+from .attention_net import ChannelAttention
 
 class CombinationModule(nn.Module):
     def __init__(self, c_low, c_up, batch_norm=False, group_norm=False, instance_norm=False):
@@ -37,3 +37,17 @@ class CombinationModule(nn.Module):
     def forward(self, x_low, x_up):
         x_low = self.up(F.interpolate(x_low, x_up.shape[2:], mode='bilinear', align_corners=False))
         return self.cat_conv(torch.cat((x_up, x_low), 1))
+
+    # 修改网络：在concat之后加注意力机制
+    # def forward(self, x_low, x_up):
+    #     # 上采样操作
+    #     x_low = self.up(F.interpolate(x_low, x_up.shape[2:], mode='bilinear', align_corners=False))
+    #
+    #     # 特征融合
+    #     fused_features = torch.cat((x_up, x_low), 1)
+    #
+    #     # 应用通道注意力机制
+    #     fused_features = ChannelAttention(fused_features.size(1))(fused_features)
+    #
+    #     # 通过卷积层进行特征转换
+    #     return self.cat_conv(fused_features)
